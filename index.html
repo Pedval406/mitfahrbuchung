@@ -1,8 +1,94 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-  <meta charset="UTF-8">
-  <title>Pedro's Mitfahrplätze</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Pedro's Schrottkarren-Service</title>
+
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: url('./20250516_120256 (2).jpg') no-repeat center center fixed;
+      background-size: cover;
+      color: white;
+    }
+
+    .overlay {
+      background-color: rgba(0, 0, 0, 0.7);
+      min-height: 100vh;
+      padding: 30px 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+    }
+
+    h1 {
+      font-size: 24px;
+      margin-bottom: 10px;
+      text-align: center;
+    }
+
+    p {
+      margin-bottom: 30px;
+      text-align: center;
+    }
+
+    .platz {
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      padding: 20px;
+      margin: 10px;
+      width: 90%;
+      max-width: 400px;
+      text-align: center;
+      backdrop-filter: blur(5px);
+    }
+
+    button {
+      padding: 10px 20px;
+      font-size: 16px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      background-color: #cc0000;
+      color: white;
+    }
+
+    .name {
+      margin-top: 10px;
+      font-weight: bold;
+      font-size: 16px;
+      color: #ff6666;
+    }
+
+    @media (min-width: 600px) {
+      h1 {
+        font-size: 32px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="overlay">
+    <h1>🚗 Pedro's Schrottkarren-Mitfahrdienst</h1>
+    <p>Maximal 3 Plätze pro Tag – ab 18:00 Uhr wird automatisch zurückgesetzt.</p>
+
+    <div class="platz">
+      <button>Platz 1 buchen</button>
+      <div class="name"></div>
+    </div>
+    <div class="platz">
+      <button>Platz 2 buchen</button>
+      <div class="name"></div>
+    </div>
+    <div class="platz">
+      <button>Platz 3 buchen</button>
+      <div class="name"></div>
+    </div>
+  </div>
+
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
     import { getFirestore, doc, getDoc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
@@ -21,10 +107,6 @@
 
     const buttons = document.querySelectorAll("button");
     const labels = document.querySelectorAll(".name");
-
-    const now = new Date();
-    const todayKey = `${now.getFullYear()}-${now.getMonth()+1}-${now.getDate()}`;
-
     const docRef = doc(db, "buchungen", "heute");
 
     async function updateBuchung(index, name) {
@@ -37,7 +119,7 @@
     function resetCheck() {
       const now = new Date();
       if (now.getHours() >= 18) {
-        setDoc(docRef, {}); // leere alle Einträge
+        setDoc(docRef, {});
       }
     }
 
@@ -47,11 +129,11 @@
         if (!name) return;
         const snapshot = await getDoc(docRef);
         const data = snapshot.exists() ? snapshot.data() : {};
-        if (data[`platz${i+1}`]) {
+        if (data[`platz${i + 1}`]) {
           alert("Platz schon vergeben!");
           return;
         }
-        await updateBuchung(i+1, name);
+        await updateBuchung(i + 1, name);
       });
     });
 
@@ -59,63 +141,16 @@
       const data = docSnap.exists() ? docSnap.data() : {};
       for (let i = 1; i <= 3; i++) {
         if (data[`platz${i}`]) {
-          buttons[i-1].disabled = true;
-          labels[i-1].innerText = "✅ " + data[`platz${i}`];
+          buttons[i - 1].disabled = true;
+          labels[i - 1].innerText = "✅ " + data[`platz${i}`];
         } else {
-          buttons[i-1].disabled = false;
-          labels[i-1].innerText = "";
+          buttons[i - 1].disabled = false;
+          labels[i - 1].innerText = "";
         }
       }
     });
 
-    setInterval(resetCheck, 60000); // checke alle 60 Sekunden
+    setInterval(resetCheck, 60000);
   </script>
-
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #f0f0f0;
-      text-align: center;
-      padding: 40px;
-    }
-    h1 {
-      color: #333;
-    }
-    .platz {
-      background: white;
-      border-radius: 10px;
-      padding: 20px;
-      margin: 20px auto;
-      width: 300px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
-    }
-    button {
-      padding: 10px 20px;
-      font-size: 16px;
-      margin-top: 10px;
-    }
-    .name {
-      margin-top: 10px;
-      font-weight: bold;
-      color: green;
-    }
-  </style>
-</head>
-<body>
-  <h1>🚗 Pedro's Mitfahrplätze</h1>
-  <p>Maximal 3 Plätze pro Tag – um 18:00 Uhr wird neu gestartet.</p>
-
-  <div class="platz">
-    <button>Platz 1 buchen</button>
-    <div class="name"></div>
-  </div>
-  <div class="platz">
-    <button>Platz 2 buchen</button>
-    <div class="name"></div>
-  </div>
-  <div class="platz">
-    <button>Platz 3 buchen</button>
-    <div class="name"></div>
-  </div>
 </body>
 </html>
