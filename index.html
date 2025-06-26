@@ -131,23 +131,6 @@
 
     updateDatumText();
 
-    async function resetWenn18Uhr() {
-      const now = new Date();
-      const stunde = now.getHours();
-      const minute = now.getMinutes();
-      const heute = formatDate(now);
-
-      const snapshot = await getDoc(docRef);
-      const data = snapshot.exists() ? snapshot.data() : {};
-      const letzterReset = data.lastReset;
-
-      if (stunde === 18 && minute === 0 && letzterReset !== heute) {
-        await setDoc(docRef, { lastReset: heute });
-      }
-    }
-
-    setInterval(resetWenn18Uhr, 30000);
-
     buttons.forEach((btn, i) => {
       btn.addEventListener("click", async () => {
         const name = prompt("Wie heißt du?");
