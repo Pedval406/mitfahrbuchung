@@ -4,7 +4,6 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Pedro's Schrottkarren-Service</title>
-
   <style>
     body {
       margin: 0;
@@ -56,11 +55,16 @@
       color: white;
     }
 
+    button:disabled {
+      background-color: #555 !important;
+      cursor: not-allowed;
+    }
+
     .name {
       margin-top: 10px;
       font-weight: bold;
       font-size: 16px;
-      color: #ff6666;
+      color: #ff9999;
     }
 
     @media (min-width: 600px) {
@@ -73,7 +77,7 @@
 <body>
   <div class="overlay">
     <h1>🚗 Pedro's Schrottkarren-Mitfahrdienst</h1>
-    <p id="datumstext">Buchung für morgen...</p>
+    <p id="datumstext">Lade...</p>
 
     <div class="platz">
       <button>Platz 1 buchen</button>
@@ -91,7 +95,7 @@
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-    import { getFirestore, doc, getDoc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+    import { getFirestore, doc, getDoc, setDoc, onSnapshot, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyA7P822uH_OquSVRJ6waxtKc4kWjgs0Mmg",
@@ -109,47 +113,56 @@
     const labels = document.querySelectorAll(".name");
     const datumText = document.getElementById("datumstext");
 
-    // Datum setzen
-    function updateDatum() {
-      const now = new Date();
-      const morgen = new Date(now);
-      if (now.getHours() >= 18) morgen.setDate(morgen.getDate() + 1);
-      const tag = morgen.getDate().toString().padStart(2, "0");
-      const monat = (morgen.getMonth() + 1).toString().padStart(2, "0");
-      const jahr = morgen.getFullYear();
-      datumText.innerText = `Buchung für den ${tag}.${monat}.${jahr} um ca. 8:20 Uhr`;
-    }
-
-    updateDatum();
-
     const docRef = doc(db, "buchungen", "heute");
 
-    async function updateBuchung(index, name) {
-      const snapshot = await getDoc(docRef);
-      const data = snapshot.exists() ? snapshot.data() : {};
-      data[`platz${index}`] = name;
-      await setDoc(docRef, data);
+    function formatDate(d) {
+      const tag = d.getDate().toString().padStart(2, "0");
+      const monat = (d.getMonth() + 1).toString().padStart(2, "0");
+      const jahr = d.getFullYear();
+      return `${tag}.${monat}.${jahr}`;
     }
 
-    function resetCheck() {
+    function updateDatumText() {
       const now = new Date();
-      if (now.getHours() >= 18) {
-        setDoc(docRef, {});
-        updateDatum(); // Update auch die Anzeige
+      const ziel = new Date(now);
+      if (now.getHours() >= 18) ziel.setDate(ziel.getDate() + 1);
+      datumText.innerText = `Buchung für den ${formatDate(ziel)} um ca. 8:20 Uhr – ab 18:00 Uhr für den nächsten Tag`;
+    }
+
+    updateDatumText();
+
+    async function resetWenn18Uhr() {
+      const now = new Date();
+      const stunde = now.getHours();
+      const minute = now.getMinutes();
+      const heute = formatDate(now);
+
+      const snapshot = await getDoc(docRef);
+      const data = snapshot.exists() ? snapshot.data() : {};
+      const letzterReset = data.lastReset;
+
+      if (stunde === 18 && minute === 0 && letzterReset !== heute) {
+        await setDoc(docRef, { lastReset: heute });
       }
     }
+
+    setInterval(resetWenn18Uhr, 30000);
 
     buttons.forEach((btn, i) => {
       btn.addEventListener("click", async () => {
         const name = prompt("Wie heißt du?");
         if (!name) return;
+
         const snapshot = await getDoc(docRef);
         const data = snapshot.exists() ? snapshot.data() : {};
         if (data[`platz${i + 1}`]) {
-          alert("Platz schon vergeben!");
+          alert("Platz bereits vergeben!");
           return;
         }
-        await updateBuchung(i + 1, name);
+
+        await updateDoc(docRef, {
+          [`platz${i + 1}`]: name
+        });
       });
     });
 
@@ -165,8 +178,6 @@
         }
       }
     });
-
-    setInterval(resetCheck, 60000); // alle 60 Sekunden prüfen
   </script>
 </body>
 </html>
