@@ -73,7 +73,7 @@
 <body>
   <div class="overlay">
     <h1>🚗 Pedro's Schrottkarren-Mitfahrdienst</h1>
-    <p>Maximal 3 Plätze pro Tag – ab 18:00 Uhr wird automatisch zurückgesetzt.</p>
+    <p id="datumstext">Buchung für morgen...</p>
 
     <div class="platz">
       <button>Platz 1 buchen</button>
@@ -107,6 +107,21 @@
 
     const buttons = document.querySelectorAll("button");
     const labels = document.querySelectorAll(".name");
+    const datumText = document.getElementById("datumstext");
+
+    // Datum setzen
+    function updateDatum() {
+      const now = new Date();
+      const morgen = new Date(now);
+      if (now.getHours() >= 18) morgen.setDate(morgen.getDate() + 1);
+      const tag = morgen.getDate().toString().padStart(2, "0");
+      const monat = (morgen.getMonth() + 1).toString().padStart(2, "0");
+      const jahr = morgen.getFullYear();
+      datumText.innerText = `Buchung für den ${tag}.${monat}.${jahr} um ca. 8:20 Uhr`;
+    }
+
+    updateDatum();
+
     const docRef = doc(db, "buchungen", "heute");
 
     async function updateBuchung(index, name) {
@@ -120,6 +135,7 @@
       const now = new Date();
       if (now.getHours() >= 18) {
         setDoc(docRef, {});
+        updateDatum(); // Update auch die Anzeige
       }
     }
 
@@ -150,7 +166,7 @@
       }
     });
 
-    setInterval(resetCheck, 60000);
+    setInterval(resetCheck, 60000); // alle 60 Sekunden prüfen
   </script>
 </body>
 </html>
