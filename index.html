@@ -91,6 +91,10 @@
       <button>Platz 3 buchen</button>
       <div class="name"></div>
     </div>
+    <div style="margin-top: 30px; text-align: center;">
+  <input id="adminPin" type="password" placeholder="Admin-PIN eingeben" style="padding: 8px; border-radius: 6px; border: none; max-width: 200px;">
+  <button id="resetButton" style="display:none; margin-top: 10px; background-color:#444;">❌ Buchungsliste zurücksetzen</button>
+</div>
   </div>
 
   <script type="module">
@@ -175,6 +179,24 @@ updateDatumTextDynamisch();
         }
       }
     });
+    const pinEingabe = document.getElementById("adminPin");
+const resetButton = document.getElementById("resetButton");
+const korrektePin = "4280"; // ← kannst du ändern!
+
+pinEingabe.addEventListener("input", () => {
+  if (pinEingabe.value === korrektePin) {
+    resetButton.style.display = "inline-block";
+  } else {
+    resetButton.style.display = "none";
+  }
+});
+
+resetButton.addEventListener("click", async () => {
+  const bestaetigen = confirm("Willst du wirklich ALLE Plätze löschen?");
+  if (!bestaetigen) return;
+  await setDoc(docRef, {}); // löscht alle Platzdaten
+  alert("Buchungsliste wurde zurückgesetzt!");
+});
   </script>
 </body>
 </html>
