@@ -126,7 +126,21 @@
       const now = new Date();
       const ziel = new Date(now);
       if (now.getHours() >= 18) ziel.setDate(ziel.getDate() + 1);
-      datumText.innerText = `Buchung für den ${formatDate(ziel)} um ca. 8:20 Uhr – ab 18:00 Uhr für den nächsten Tag`;
+      async function updateDatumTextDynamisch() {
+  const snapshot = await getDoc(docRef);
+  const data = snapshot.exists() ? snapshot.data() : {};
+  if (data.infoText) {
+    datumText.innerText = data.infoText;
+  } else {
+    const now = new Date();
+    const ziel = new Date(now);
+    if (now.getHours() >= 18) ziel.setDate(ziel.getDate() + 1);
+    datumText.innerText = `Buchung für den ${formatDate(ziel)} um ca. 8:20 Uhr – ab 18:00 Uhr für den nächsten Tag`;
+  }
+}
+
+updateDatumTextDynamisch();
+
     }
 
     updateDatumText();
