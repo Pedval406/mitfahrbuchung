@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Pedro's Schrottkarren-Service</title>
+  <title>Drive with Pedro</title>
   <style>
     body {
       margin: 0;
@@ -20,13 +20,17 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      justify-content: flex-start;
+    }
+
+    img.logo {
+      width: 200px;
+      margin-bottom: 20px;
     }
 
     h1 {
-      font-size: 24px;
-      margin-bottom: 10px;
+      font-size: 26px;
       text-align: center;
+      margin-bottom: 10px;
     }
 
     p {
@@ -51,12 +55,15 @@
       border: none;
       border-radius: 8px;
       cursor: pointer;
-      background-color: #cc0000;
-      color: white;
+      background-color: #ffd700;
+      color: black;
+      font-weight: bold;
+      box-shadow: 0 3px 6px rgba(0,0,0,0.3);
     }
 
     button:disabled {
-      background-color: #555 !important;
+      background-color: #999 !important;
+      color: white !important;
       cursor: not-allowed;
     }
 
@@ -64,7 +71,34 @@
       margin-top: 10px;
       font-weight: bold;
       font-size: 16px;
-      color: #ff9999;
+      color: #ffcc99;
+    }
+
+    #adminArea {
+      margin-top: 40px;
+      text-align: center;
+      opacity: 0.5;
+    }
+
+    #adminPin {
+      padding: 6px;
+      border-radius: 4px;
+      border: 1px solid #aaa;
+      background-color: rgba(255, 255, 255, 0.3);
+      color: white;
+      font-size: 12px;
+      width: 100px;
+    }
+
+    #resetButton {
+      display: none;
+      margin-top: 8px;
+      background-color: rgba(255, 255, 255, 0.15);
+      color: white;
+      font-size: 12px;
+      padding: 6px 12px;
+      border: none;
+      border-radius: 4px;
     }
 
     @media (min-width: 600px) {
@@ -76,6 +110,7 @@
 </head>
 <body>
   <div class="overlay">
+    <img src="./drivewithPedro.png" alt="Drive with Pedro Logo" class="logo" />
     <h1>🚗 Pedro's Schrottkarren-Mitfahrdienst</h1>
     <p id="datumstext">Lade...</p>
 
@@ -91,38 +126,11 @@
       <button>Platz 3 buchen</button>
       <div class="name"></div>
     </div>
-    <div id="adminArea" style="margin-top: 40px; text-align: center; opacity: 0.5;">
-  <input
-    id="adminPin"
-    type="password"
-    placeholder="Admin"
-    style="
-      padding: 6px;
-      border-radius: 4px;
-      border: 1px solid #aaa;
-      background-color: rgba(255, 255, 255, 0.3);
-      color: white;
-      font-size: 12px;
-      width: 100px;
-    "
-  />
-  <button
-    id="resetButton"
-    style="
-      display: none;
-      margin-top: 8px;
-      background-color: rgba(255, 255, 255, 0.15);
-      color: white;
-      font-size: 12px;
-      padding: 6px 12px;
-      border: none;
-      border-radius: 4px;
-    "
-  >
-    ❌ Zurücksetzen
-  </button>
-</div>
 
+    <div id="adminArea">
+      <input id="adminPin" type="password" placeholder="Admin" />
+      <button id="resetButton">❌ Zurücksetzen</button>
+    </div>
   </div>
 
   <script type="module">
@@ -154,28 +162,20 @@
       return `${tag}.${monat}.${jahr}`;
     }
 
-    function updateDatumText() {
-      const now = new Date();
-      const ziel = new Date(now);
-      if (now.getHours() >= 18) ziel.setDate(ziel.getDate() + 1);
-      async function updateDatumTextDynamisch() {
-  const snapshot = await getDoc(docRef);
-  const data = snapshot.exists() ? snapshot.data() : {};
-  if (data.infoText) {
-    datumText.innerText = data.infoText;
-  } else {
-    const now = new Date();
-    const ziel = new Date(now);
-    if (now.getHours() >= 18) ziel.setDate(ziel.getDate() + 1);
-    datumText.innerText = `Buchung für den ${formatDate(ziel)} um ca. 8:20 Uhr – ab 18:00 Uhr für den nächsten Tag`;
-  }
-}
-
-updateDatumTextDynamisch();
-
+    async function updateDatumTextDynamisch() {
+      const snapshot = await getDoc(docRef);
+      const data = snapshot.exists() ? snapshot.data() : {};
+      if (data.infoText) {
+        datumText.innerText = data.infoText;
+      } else {
+        const now = new Date();
+        const ziel = new Date(now);
+        if (now.getHours() >= 18) ziel.setDate(ziel.getDate() + 1);
+        datumText.innerText = `Buchung für den ${formatDate(ziel)} um ca. 8:20 Uhr – ab 18:00 Uhr für den nächsten Tag`;
+      }
     }
 
-    updateDatumText();
+    updateDatumTextDynamisch();
 
     buttons.forEach((btn, i) => {
       btn.addEventListener("click", async () => {
@@ -207,24 +207,26 @@ updateDatumTextDynamisch();
         }
       }
     });
+
+    // === Admin-Reset mit PIN ===
     const pinEingabe = document.getElementById("adminPin");
-const resetButton = document.getElementById("resetButton");
-const korrektePin = "4280"; // ← kannst du ändern!
+    const resetButton = document.getElementById("resetButton");
+    const korrektePin = "4280"; // ← kannst du ändern!
 
-pinEingabe.addEventListener("input", () => {
-  if (pinEingabe.value === korrektePin) {
-    resetButton.style.display = "inline-block";
-  } else {
-    resetButton.style.display = "none";
-  }
-});
+    pinEingabe.addEventListener("input", () => {
+      if (pinEingabe.value === korrektePin) {
+        resetButton.style.display = "inline-block";
+      } else {
+        resetButton.style.display = "none";
+      }
+    });
 
-resetButton.addEventListener("click", async () => {
-  const bestaetigen = confirm("Willst du wirklich ALLE Plätze löschen?");
-  if (!bestaetigen) return;
-  await setDoc(docRef, {}); // löscht alle Platzdaten
-  alert("Buchungsliste wurde zurückgesetzt!");
-});
+    resetButton.addEventListener("click", async () => {
+      const bestaetigen = confirm("Willst du wirklich ALLE Plätze löschen?");
+      if (!bestaetigen) return;
+      await setDoc(docRef, {});
+      alert("Buchungsliste wurde zurückgesetzt!");
+    });
   </script>
 </body>
 </html>
